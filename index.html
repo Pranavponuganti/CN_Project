@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Application</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    #chat {
+      max-width: 500px;
+      margin: 50px auto;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow-y: scroll;
+      max-height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      word-wrap: break-word;
+      max-width: 70%;
+    }
+    .sender {
+      background-color: #007bff;
+      color: #fff;
+      align-self: flex-end;
+    }
+    .receiver {
+      background-color: #f0f0f0;
+      color: #333;
+      align-self: flex-start;
+    }
+    #message_input {
+      width: calc(50% - 70px);
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 16px;
+    }
+    #send {
+      width: 60px;
+      padding: 10px;
+      border: none;
+      border-radius: 3px;
+      background-color: #007bff;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <center>
+    <h1>CHAT APPLICATION</h1>
+    <div id="chat"></div>
+    <div id="input_section">
+      <input id="message_input" autocomplete="off" />
+      <button id="send">Send</button>
+    </div>
+  </center>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+  <script>
+    var socket = io.connect('http://172.22.205.216:5000'); // Replace with your server address
+
+    socket.on('message', function(msg) {
+      console.log('Received message: ' + msg);
+      appendMessage(msg, 'receiver');
+    });
+
+    document.getElementById("send").onclick = function() {
+      sendMessage();
+    };
+
+    document.getElementById("message_input").addEventListener("keydown", function(event) {
+      if (event.keyCode === 13) { // Enter key pressed
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      var msg = document.getElementById("message_input").value.trim();
+      if (msg !== "") {
+        appendMessage(msg, 'sender');
+        socket.send(msg);
+        document.getElementById("message_input").value = "";
+      }
+    }
+
+    function appendMessage(msg, className) {
+      var chatDiv = document.getElementById("chat");
+      var messageDiv = document.createElement("div");
+      messageDiv.textContent = msg;
+      messageDiv.classList.add("message");
+      messageDiv.classList.add(className);
+
+      // Check if the last message is from the sender and matches the message being sent
+      var lastMessage = chatDiv.lastElementChild;
+      if (lastMessage && lastMessage.classList.contains('sender') && lastMessage.textContent === msg) {
+        // Update the content of the last message instead of appending a new one
+        lastMessage.textContent = msg;
+      } else {
+        // Append a new message
+        chatDiv.appendChild(messageDiv);
+      }
+
+      chatDiv.scrollTop = chatDiv.scrollHeight; // Scroll to bottom after appending message
+    }
+  </script>
+</body>
+</html>
